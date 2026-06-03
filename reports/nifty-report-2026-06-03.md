@@ -1,5 +1,5 @@
 # Nifty 50 Range Forecast — Thursday, 04 June 2026
-_Generated: 2026-06-03 06:44 UK / 2026-06-03 11:14 IST_
+_Generated: 2026-06-03 07:26 UK / 2026-06-03 11:56 IST_
 
 > **Disclaimer:** This is educational technical analysis only, not financial advice. Do not trade only based on this report.
 
@@ -9,16 +9,16 @@ _Generated: 2026-06-03 06:44 UK / 2026-06-03 11:14 IST_
 
 | Item | Value |
 |:-----|:------|
-| **Previous Close** | 23207.55078125 |
+| **Previous Close** | 23212.150390625 |
 | **Previous High** | 23447.650390625 |
 | **Previous Low** | 23194.80078125 |
 | **Previous Open** | 23415.94921875 |
-| **India VIX** | 16.69 |
-| **GIFT Nifty (last)** | 263.5 |
+| **India VIX** | 16.6 |
+| **GIFT Nifty (last)** | 263.55 |
 | **VWAP (5M)** | N/A |
 | **FII/DII** | N/A |
 
-India VIX at **16.69** — moderate volatility; normal trading conditions.
+India VIX at **16.6** — moderate volatility; normal trading conditions.
 
 ---
 
@@ -27,30 +27,30 @@ India VIX at **16.69** — moderate volatility; normal trading conditions.
 ### Central Pivot Range (CPR)
 | Level | Value |
 |:------|:------|
-| **TC (Top CPR)** | 23245.44 |
-| **Pivot** | 23283.33 |
+| **TC (Top CPR)** | 23248.51 |
+| **Pivot** | 23284.87 |
 | **BC (Bottom CPR)** | 23321.23 |
-| **CPR Width** | 75.78 pts |
+| **CPR Width** | 72.72 pts |
 
-CPR width is **75.78 pts (0.327%)** — **wide CPR → sideways/volatile day expected.**
+CPR width is **72.72 pts (0.313%)** — **wide CPR → sideways/volatile day expected.**
 
 ### Floor Pivots
 | Level | Value |
 |:------|:------|
-| R3 | 23624.72 |
-| R2 | 23536.18 |
-| R1 | 23371.87 |
-| **Pivot** | **23283.33** |
-| S1 | 23119.02 |
-| S2 | 23030.48 |
-| S3 | 22866.17 |
+| R3 | 23627.78 |
+| R2 | 23537.72 |
+| R1 | 23374.93 |
+| **Pivot** | **23284.87** |
+| S1 | 23122.08 |
+| S2 | 23032.02 |
+| S3 | 22869.23 |
 
 ### Bollinger Bands (20,2) — Daily
 | Band | Value |
 |:-----|:------|
-| Upper | 24348.12 |
-| Middle (SMA 20) | 23727.49 |
-| Lower | 23106.86 |
+| Upper | 24347.54 |
+| Middle (SMA 20) | 23727.72 |
+| Lower | 23107.9 |
 
 ### Supertrend (ATR 10, Mult 3)
 | Timeframe | Value | Signal |
@@ -61,9 +61,9 @@ CPR width is **75.78 pts (0.327%)** — **wide CPR → sideways/volatile day exp
 ### RSI (14)
 | Timeframe | RSI |
 |:----------|:----|
-| Daily | 38.02 |
-| 1H | 30.05 |
-| 15M | 32.87 |
+| Daily | 38.09 |
+| 1H | 30.66 |
+| 15M | 34.2 |
 
 ### Opening Range (last session)
 | Level | Value |
@@ -137,20 +137,20 @@ _TradingView script search unavailable today. Using standard indicators only._
 
 | If Nifty opens in this range | Bias | First target | Extended target | Invalid level | Simple explanation |
 |:------------------------------|:-----|:-------------|:----------------|:--------------|:-------------------|
-| **Above R1** (> 23371.87) | Strong Bullish | 23536.18 | 23624.72 | 23371.87 | Momentum breakout; ride the trend with trailing stop at R1. |
-| **Above TC, below R1** (23245.44–23371.87) | Bullish | 23371.87 | 23536.18 | 23245.44 | Above CPR top; first target R1. Exit if price falls back below TC. |
-| **Inside CPR** (23321.23–23245.44) | Neutral/Range | 23245.44 or 23321.23 | 23371.87 / 23119.02 | – | Choppy session likely. Wait for CPR breakout/breakdown before entering. |
-| **Below BC, above S1** (23119.02–23321.23) | Bearish | 23119.02 | 23030.48 | 23321.23 | Below CPR base; first target S1. Invalidated if price reclaims BC. |
-| **Below S1** (< 23119.02) | Strong Bearish | 23030.48 | 22866.17 | 23119.02 | Weakness confirmed. Target S2/S3 with stop above S1. |
-| **Near Prev Day High** (~23447.650390625) | Watch | 23371.87 | 23536.18 | 23447.650390625 | Use 5m/15m candle close above PDH as breakout confirmation. |
-| **Near Prev Day Low** (~23194.80078125) | Watch | 23119.02 | 23030.48 | 23194.80078125 | Watch for ORB low + RSI divergence for reversal; else target S2. |
+| **Above R1** (> 23374.93) | Strong Bullish | 23537.72 | 23627.78 | 23374.93 | Momentum breakout; ride the trend with trailing stop at R1. |
+| **Above TC, below R1** (23248.51–23374.93) | Bullish | 23374.93 | 23537.72 | 23248.51 | Above CPR top; first target R1. Exit if price falls back below TC. |
+| **Inside CPR** (23321.23–23248.51) | Neutral/Range | 23248.51 or 23321.23 | 23374.93 / 23122.08 | – | Choppy session likely. Wait for CPR breakout/breakdown before entering. |
+| **Below BC, above S1** (23122.08–23321.23) | Bearish | 23122.08 | 23032.02 | 23321.23 | Below CPR base; first target S1. Invalidated if price reclaims BC. |
+| **Below S1** (< 23122.08) | Strong Bearish | 23032.02 | 22869.23 | 23122.08 | Weakness confirmed. Target S2/S3 with stop above S1. |
+| **Near Prev Day High** (~23447.650390625) | Watch | 23374.93 | 23537.72 | 23447.650390625 | Use 5m/15m candle close above PDH as breakout confirmation. |
+| **Near Prev Day Low** (~23194.80078125) | Watch | 23122.08 | 23032.02 | 23194.80078125 | Watch for ORB low + RSI divergence for reversal; else target S2. |
 
 ---
 
 ## 7. Key Risks & Watch Points
 
-- **Gap up > 23371.87**: watch for exhaustion and early reversal near R2 (23536.18).
-- **Gap down < 23119.02**: confirm with 15M candle close; avoid buying the first red candle.
+- **Gap up > 23374.93**: watch for exhaustion and early reversal near R2 (23537.72).
+- **Gap down < 23122.08**: confirm with 15M candle close; avoid buying the first red candle.
 - **India VIX spike** during session → widen stops by 20–30%.
 - **FII heavy selling** overnight → gap-down risk; wait for stability before going long.
 - **PCR data unavailable today**.
