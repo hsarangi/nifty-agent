@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nifty 50 Daily Analysis — History</title>
+  
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2e3348;
+    --accent: #4f8ef7;
+    --green: #26a69a;
+    --red: #ef5350;
+    --yellow: #ffa726;
+    --text: #e0e0e0;
+    --muted: #8b90a0;
+    --font: 'Segoe UI', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 20px 12px;
+  }
+  #sidebar h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    padding-left: 4px;
+  }
+  #sidebar ul { list-style: none; }
+  #sidebar li { margin: 2px 0; }
+  #sidebar a {
+    display: block;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 13px;
+    transition: background 0.15s;
+  }
+  #sidebar a:hover, #sidebar a.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Main content ── */
+  #content { flex: 1; padding: 32px 40px; max-width: 1100px; }
+
+  .report-section {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 48px;
+    overflow: hidden;
+    scroll-margin-top: 24px;
+  }
+  .report-header {
+    background: linear-gradient(135deg, #1e2236 0%, #252a3d 100%);
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .report-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .report-header .meta {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .report-body { padding: 24px 28px; }
+
+  /* ── Typography ── */
+  h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 28px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #c5c8d8;
+    margin: 18px 0 8px;
+  }
+  p { line-height: 1.6; margin: 8px 0; color: var(--text); }
+  em { color: var(--muted); font-style: italic; }
+  strong { color: #fff; font-weight: 600; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  blockquote {
+    border-left: 3px solid var(--yellow);
+    background: #1e2030;
+    padding: 10px 16px;
+    border-radius: 0 6px 6px 0;
+    margin: 12px 0;
+    color: var(--yellow);
+    font-size: 12px;
+  }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 18px;
+    font-size: 13px;
+  }
+  th {
+    background: #1e2236;
+    color: var(--accent);
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(79,142,247,0.05); }
+
+  /* ── Signal colours ── */
+  td:has(> span.bull), td.bull { color: var(--green); }
+  td:has(> span.bear), td.bear { color: var(--red); }
+  td:has(> span.neut), td.neut { color: var(--yellow); }
+
+  /* ── Bias badge ── */
+  .bias-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 10px 0;
+  }
+  .bias-BULLISH  { background: rgba(38,166,154,.2); color: var(--green); border: 1px solid var(--green); }
+  .bias-BEARISH  { background: rgba(239,83,80,.2);  color: var(--red);   border: 1px solid var(--red); }
+  .bias-NEUTRAL  { background: rgba(255,167,38,.2); color: var(--yellow);border: 1px solid var(--yellow); }
+
+  /* ── Links ── */
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── Scenario table special ── */
+  .scenario-table td:nth-child(2) { font-weight: 600; }
+
+  @media (max-width: 768px) {
+    #sidebar { display: none; }
+    #content { padding: 16px; }
+  }
+</style>
+
+</head>
+<body>
+  <nav id="sidebar">
+    <h2>📈 Reports</h2>
+    <ul>
+    <li><a href="#2026-06-03">2026-06-03</a></li>
+    </ul>
+  </nav>
+  <div id="content">
+
+<section class="report-section" id="2026-06-03">
+  <div class="report-header">
+    <h1>Nifty 50 Range Forecast — Thursday, 04 June 2026</h1>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <span class="bias-badge bias-BEARISH">BEARISH</span>
+      <span class="meta">Generated: 2026-06-03 06:44 UK / 2026-06-03 11:14 IST</span>
+    </div>
+  </div>
+  <div class="report-body">
+    
+<p><em>Generated: 2026-06-03 06:44 UK / 2026-06-03 11:14 IST</em></p>
+<blockquote>
+<p><strong>Disclaimer:</strong> This is educational technical analysis only, not financial advice. Do not trade only based on this report.</p>
+</blockquote>
+<hr/>
+<h2>1. Market Context</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Item</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Previous Close</strong></td>
+<td style="text-align: left;">23207.55078125</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Previous High</strong></td>
+<td style="text-align: left;">23447.650390625</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Previous Low</strong></td>
+<td style="text-align: left;">23194.80078125</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Previous Open</strong></td>
+<td style="text-align: left;">23415.94921875</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>India VIX</strong></td>
+<td style="text-align: left;">16.69</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>GIFT Nifty (last)</strong></td>
+<td style="text-align: left;">263.5</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>VWAP (5M)</strong></td>
+<td style="text-align: left;">N/A</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>FII/DII</strong></td>
+<td style="text-align: left;">N/A</td>
+</tr>
+</tbody>
+</table>
+<p>India VIX at <strong>16.69</strong> — moderate volatility; normal trading conditions.</p>
+<hr/>
+<h2>2. Key Levels for Thursday, 04 June 2026</h2>
+<h3>Central Pivot Range (CPR)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Level</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>TC (Top CPR)</strong></td>
+<td style="text-align: left;">23245.44</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Pivot</strong></td>
+<td style="text-align: left;">23283.33</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>BC (Bottom CPR)</strong></td>
+<td style="text-align: left;">23321.23</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>CPR Width</strong></td>
+<td style="text-align: left;">75.78 pts</td>
+</tr>
+</tbody>
+</table>
+<p>CPR width is <strong>75.78 pts (0.327%)</strong> — <strong>wide CPR → sideways/volatile day expected.</strong></p>
+<h3>Floor Pivots</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Level</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">R3</td>
+<td style="text-align: left;">23624.72</td>
+</tr>
+<tr>
+<td style="text-align: left;">R2</td>
+<td style="text-align: left;">23536.18</td>
+</tr>
+<tr>
+<td style="text-align: left;">R1</td>
+<td style="text-align: left;">23371.87</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Pivot</strong></td>
+<td style="text-align: left;"><strong>23283.33</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">S1</td>
+<td style="text-align: left;">23119.02</td>
+</tr>
+<tr>
+<td style="text-align: left;">S2</td>
+<td style="text-align: left;">23030.48</td>
+</tr>
+<tr>
+<td style="text-align: left;">S3</td>
+<td style="text-align: left;">22866.17</td>
+</tr>
+</tbody>
+</table>
+<h3>Bollinger Bands (20,2) — Daily</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Band</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Upper</td>
+<td style="text-align: left;">24348.12</td>
+</tr>
+<tr>
+<td style="text-align: left;">Middle (SMA 20)</td>
+<td style="text-align: left;">23727.49</td>
+</tr>
+<tr>
+<td style="text-align: left;">Lower</td>
+<td style="text-align: left;">23106.86</td>
+</tr>
+</tbody>
+</table>
+<h3>Supertrend (ATR 10, Mult 3)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Timeframe</th>
+<th style="text-align: left;">Value</th>
+<th style="text-align: left;">Signal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Daily</td>
+<td style="text-align: left;">nan</td>
+<td style="text-align: left;">Bullish</td>
+</tr>
+<tr>
+<td style="text-align: left;">1H</td>
+<td style="text-align: left;">nan</td>
+<td style="text-align: left;">Bullish</td>
+</tr>
+</tbody>
+</table>
+<h3>RSI (14)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Timeframe</th>
+<th style="text-align: left;">RSI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Daily</td>
+<td style="text-align: left;">38.02</td>
+</tr>
+<tr>
+<td style="text-align: left;">1H</td>
+<td style="text-align: left;">30.05</td>
+</tr>
+<tr>
+<td style="text-align: left;">15M</td>
+<td style="text-align: left;">32.87</td>
+</tr>
+</tbody>
+</table>
+<h3>Opening Range (last session)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Level</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">ORB High</td>
+<td style="text-align: left;">23442.4</td>
+</tr>
+<tr>
+<td style="text-align: left;">ORB Low</td>
+<td style="text-align: left;">23265.35</td>
+</tr>
+<tr>
+<td style="text-align: left;">ORB Range</td>
+<td style="text-align: left;">177.05 pts</td>
+</tr>
+</tbody>
+</table>
+<h3>Volume Profile (20-day)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Level</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">POC (Point of Control)</td>
+<td style="text-align: left;">23709.72</td>
+</tr>
+<tr>
+<td style="text-align: left;">HVN (High Vol Nodes)</td>
+<td style="text-align: left;">23709.72, 23516.63, 23387.9</td>
+</tr>
+<tr>
+<td style="text-align: left;">LVN (Low Vol Nodes)</td>
+<td style="text-align: left;">23452.26, 23838.45, 23259.17</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2>3. Indicator Agreement / Disagreement</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Indicator</th>
+<th style="text-align: left;">Signal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Daily Supertrend</td>
+<td style="text-align: left;">🟢 Bullish</td>
+</tr>
+<tr>
+<td style="text-align: left;">1H Supertrend</td>
+<td style="text-align: left;">🟢 Bullish</td>
+</tr>
+<tr>
+<td style="text-align: left;">RSI(14) Daily</td>
+<td style="text-align: left;">🔴 Bearish</td>
+</tr>
+<tr>
+<td style="text-align: left;">RSI(14) 1H</td>
+<td style="text-align: left;">🔴 Bearish</td>
+</tr>
+<tr>
+<td style="text-align: left;">RSI(14) 15M</td>
+<td style="text-align: left;">🔴 Bearish</td>
+</tr>
+<tr>
+<td style="text-align: left;">BB Daily (price vs upper)</td>
+<td style="text-align: left;">🟡 Neutral</td>
+</tr>
+<tr>
+<td style="text-align: left;">CPR Position</td>
+<td style="text-align: left;">🔴 Bearish</td>
+</tr>
+<tr>
+<td style="text-align: left;">Daily TF Bias</td>
+<td style="text-align: left;">🔴 Bearish</td>
+</tr>
+<tr>
+<td style="text-align: left;">1H TF Bias</td>
+<td style="text-align: left;">🔴 Bearish</td>
+</tr>
+<tr>
+<td style="text-align: left;">30M TF Bias</td>
+<td style="text-align: left;">🔴 Bearish</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Bullish signals: 0% | Bearish signals: 90%</strong></p>
+<hr/>
+<h2>4. TradingView Community Indicators Searched Today</h2>
+<p><em>These popular public Pine Script indicators were surfaced from TradingView's library to supplement standard analysis.</em></p>
+<p><em>TradingView script search unavailable today. Using standard indicators only.</em></p>
+<hr/>
+<h2>5. Weighted Bias Breakdown</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Signal</th>
+<th style="text-align: left;">Weight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Daily Chart Trend</td>
+<td style="text-align: left;">Bearish</td>
+<td style="text-align: left;">25%</td>
+</tr>
+<tr>
+<td style="text-align: left;">1H Trend</td>
+<td style="text-align: left;">Bearish</td>
+<td style="text-align: left;">20%</td>
+</tr>
+<tr>
+<td style="text-align: left;">30M Trend</td>
+<td style="text-align: left;">Bearish</td>
+<td style="text-align: left;">15%</td>
+</tr>
+<tr>
+<td style="text-align: left;">15M Trend</td>
+<td style="text-align: left;">Bearish</td>
+<td style="text-align: left;">10%</td>
+</tr>
+<tr>
+<td style="text-align: left;">5M Trend</td>
+<td style="text-align: left;">Bearish</td>
+<td style="text-align: left;">10%</td>
+</tr>
+<tr>
+<td style="text-align: left;">CPR / Pivot Position</td>
+<td style="text-align: left;">Bearish</td>
+<td style="text-align: left;">10%</td>
+</tr>
+<tr>
+<td style="text-align: left;">Community Indicators</td>
+<td style="text-align: left;">Neutral</td>
+<td style="text-align: left;">10%</td>
+</tr>
+</tbody>
+</table>
+<h3>➜ Final Bias: <strong>Strong BEARISH</strong> (0% bull vs 90% bear)</h3>
+<hr/>
+<h2>6. Scenario Table for Thursday, 04 June 2026</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">If Nifty opens in this range</th>
+<th style="text-align: left;">Bias</th>
+<th style="text-align: left;">First target</th>
+<th style="text-align: left;">Extended target</th>
+<th style="text-align: left;">Invalid level</th>
+<th style="text-align: left;">Simple explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Above R1</strong> (&gt; 23371.87)</td>
+<td style="text-align: left;">Strong Bullish</td>
+<td style="text-align: left;">23536.18</td>
+<td style="text-align: left;">23624.72</td>
+<td style="text-align: left;">23371.87</td>
+<td style="text-align: left;">Momentum breakout; ride the trend with trailing stop at R1.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Above TC, below R1</strong> (23245.44–23371.87)</td>
+<td style="text-align: left;">Bullish</td>
+<td style="text-align: left;">23371.87</td>
+<td style="text-align: left;">23536.18</td>
+<td style="text-align: left;">23245.44</td>
+<td style="text-align: left;">Above CPR top; first target R1. Exit if price falls back below TC.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Inside CPR</strong> (23321.23–23245.44)</td>
+<td style="text-align: left;">Neutral/Range</td>
+<td style="text-align: left;">23245.44 or 23321.23</td>
+<td style="text-align: left;">23371.87 / 23119.02</td>
+<td style="text-align: left;">–</td>
+<td style="text-align: left;">Choppy session likely. Wait for CPR breakout/breakdown before entering.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Below BC, above S1</strong> (23119.02–23321.23)</td>
+<td style="text-align: left;">Bearish</td>
+<td style="text-align: left;">23119.02</td>
+<td style="text-align: left;">23030.48</td>
+<td style="text-align: left;">23321.23</td>
+<td style="text-align: left;">Below CPR base; first target S1. Invalidated if price reclaims BC.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Below S1</strong> (&lt; 23119.02)</td>
+<td style="text-align: left;">Strong Bearish</td>
+<td style="text-align: left;">23030.48</td>
+<td style="text-align: left;">22866.17</td>
+<td style="text-align: left;">23119.02</td>
+<td style="text-align: left;">Weakness confirmed. Target S2/S3 with stop above S1.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Near Prev Day High</strong> (~23447.650390625)</td>
+<td style="text-align: left;">Watch</td>
+<td style="text-align: left;">23371.87</td>
+<td style="text-align: left;">23536.18</td>
+<td style="text-align: left;">23447.650390625</td>
+<td style="text-align: left;">Use 5m/15m candle close above PDH as breakout confirmation.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Near Prev Day Low</strong> (~23194.80078125)</td>
+<td style="text-align: left;">Watch</td>
+<td style="text-align: left;">23119.02</td>
+<td style="text-align: left;">23030.48</td>
+<td style="text-align: left;">23194.80078125</td>
+<td style="text-align: left;">Watch for ORB low + RSI divergence for reversal; else target S2.</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2>7. Key Risks &amp; Watch Points</h2>
+<ul>
+<li><strong>Gap up &gt; 23371.87</strong>: watch for exhaustion and early reversal near R2 (23536.18).</li>
+<li><strong>Gap down &lt; 23119.02</strong>: confirm with 15M candle close; avoid buying the first red candle.</li>
+<li><strong>India VIX spike</strong> during session → widen stops by 20–30%.</li>
+<li><strong>FII heavy selling</strong> overnight → gap-down risk; wait for stability before going long.</li>
+<li><strong>PCR data unavailable today</strong>.</li>
+</ul>
+<hr/>
+<h2>8. Data Sources Used Today</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Source</th>
+<th style="text-align: left;">Data</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">TradingView (tvdatafeed)</td>
+<td style="text-align: left;">OHLCV multi-timeframe (primary)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Yahoo Finance (yfinance)</td>
+<td style="text-align: left;">OHLCV fallback + India VIX</td>
+</tr>
+<tr>
+<td style="text-align: left;">NSE India (nseindia.com)</td>
+<td style="text-align: left;">Option chain, FII/DII data</td>
+</tr>
+<tr>
+<td style="text-align: left;">TradingView Public Scripts</td>
+<td style="text-align: left;">Community indicator search</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<blockquote>
+<p><strong>Disclaimer:</strong> This is educational technical analysis only, not financial advice. Do not trade only based on this report.</p>
+</blockquote>
+  </div>
+</section>
+
+  </div>
+  
+<script>
+  // Highlight sidebar link for the section currently in view
+  const sections = document.querySelectorAll('.report-section');
+  const links = document.querySelectorAll('#sidebar a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`#sidebar a[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.2 });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

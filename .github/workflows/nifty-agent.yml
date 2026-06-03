@@ -1,0 +1,55 @@
+name: Nifty 50 Daily Analysis Agent
+
+on:
+  # Fire at 18:00 UTC (= 19:00 BST summer) and 19:00 UTC (= 19:00 GMT winter)
+  # The Python script checks Europe/London time internally and exits early if it
+  # is not yet within the 7 PM UK window, so only one run per day will produce output.
+  schedule:
+    - cron: "0 18 * * 1-5"   # 18:00 UTC Mon–Fri  (7 PM BST / British Summer Time)
+    - cron: "0 19 * * 1-5"   # 19:00 UTC Mon–Fri  (7 PM GMT / Winter)
+
+  # Allow manual trigger from the Actions tab (also useful for testing)
+  workflow_dispatch:
+    inputs:
+      force_run:
+        description: "Set to 1 to skip the 7 PM time-window check"
+        required: false
+        default: "0"
+
+jobs:
+  nifty-analysis:
+    name: Generate Nifty 50 Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: write   # needed to push the report file back to the repo
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Nifty agent
+        env:
+          # FORCE_RUN=1 skips the 7 PM UK time-window check.
+          # Automatically set to 1 on manual dispatch when the user requested it.
+          FORCE_RUN: ${{ github.event.inputs.force_run || '0' }}
+        run: python3 nifty_agent.py
+
+      - name: Commit and push report
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/
+          # Only commit if there are new/changed files
+          git diff --cached --quiet || git commit -m "chore: nifty-report-$(date +%Y-%m-%d)"
+          git push
