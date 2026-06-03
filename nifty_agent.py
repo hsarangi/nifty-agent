@@ -40,35 +40,152 @@ DISCLAIMER = (
 # 1. DATA FETCHING
 # ─────────────────────────────────────────────
 
-def fetch_nifty_yfinance(period: str = "60d") -> pd.DataFrame:
-    """Primary free data source via yfinance (^NSEI)."""
-    import yfinance as yf
+import time
 
-    log.info("Fetching Nifty 50 daily data from yfinance …")
-    ticker = yf.Ticker("^NSEI")
-    df = ticker.history(period=period, interval="1d", auto_adjust=True)
-    if df.empty:
-        raise ValueError("yfinance returned empty daily data for ^NSEI")
-    df.index = pd.to_datetime(df.index).tz_localize(None)
-    df.columns = [c.lower() for c in df.columns]
-    return df
-
-
-def fetch_nifty_intraday_yfinance(interval: str = "5m", period: str = "5d") -> pd.DataFrame:
-    """Intraday data from yfinance."""
-    import yfinance as yf
-
-    log.info(f"Fetching Nifty 50 {interval} intraday data from yfinance …")
-    df = yf.download("^NSEI", period=period, interval=interval,
-                     auto_adjust=True, progress=False)
-    if df.empty:
-        raise ValueError(f"yfinance returned empty {interval} data for ^NSEI")
+def _normalise_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Lowercase columns, strip timezone from index."""
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = [c[0].lower() for c in df.columns]
     else:
         df.columns = [c.lower() for c in df.columns]
     df.index = pd.to_datetime(df.index).tz_localize(None)
-    return df
+    # Keep only OHLCV columns if extras present
+    keep = [c for c in ["open", "high", "low", "close", "volume"] if c in df.columns]
+    return df[keep].dropna(subset=["close"])
+
+
+def fetch_nifty_stooq(period_days: int = 60) -> pd.DataFrame:
+    """
+    Fetch Nifty 50 daily data from Stooq (stooq.com).
+    Stooq is a free Polish financial portal that serves global index data
+    as plain CSV — no authentication, no rate limits from CI runners.
+    Symbol: ^nft  (Nifty 50)
+    """
+    import io
+    log.info("Fetching Nifty 50 daily data from Stooq …")
+    url = "https://stooq.com/q/d/l/?s=^nft&i=d"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        r = requests.get(url, headers=headers, timeout=15)
+        r.raise_for_status()
+        df = pd.read_csv(io.StringIO(r.text))
+        df.columns = [c.lower() for c in df.columns]
+        df = df.rename(columns={"vol": "volume"})
+        df["date"] = pd.to_datetime(df["date"])
+        df = df.set_index("date").sort_index()
+        df = df.tail(period_days)
+        if df.empty:
+            raise ValueError("Stooq returned empty data")
+        log.info(f"Stooq OK — {len(df)} daily bars")
+        return df
+    except Exception as e:
+        log.warning(f"Stooq fetch failed: {e}")
+        return pd.DataFrame()
+
+
+def fetch_nifty_nse_bhavcopy() -> pd.DataFrame:
+    """
+    Fetch latest NSE bhavcopy (official EOD data from NSE India).
+    Returns a single-row DataFrame with the most recent OHLC for NIFTY 50.
+    """
+    log.info("Fetching NSE bhavcopy …")
+    headers = {
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json",
+        "Referer": "https://www.nseindia.com/",
+    }
+    url = "https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050"
+    try:
+        session = requests.Session()
+        session.get("https://www.nseindia.com", headers=headers, timeout=10)
+        r = session.get(url, headers=headers, timeout=10)
+        if r.status_code == 200:
+            data = r.json()
+            meta = data.get("metadata", {})
+            last = float(meta.get("last", 0))
+            high = float(meta.get("high", last))
+            low  = float(meta.get("low", last))
+            open_ = float(meta.get("open", last))
+            today = pd.Timestamp.today().normalize()
+            df = pd.DataFrame([{
+                "open": open_, "high": high, "low": low,
+                "close": last, "volume": 0
+            }], index=[today])
+            log.info(f"NSE bhavcopy OK — close={last}")
+            return df
+    except Exception as e:
+        log.warning(f"NSE bhavcopy fetch failed: {e}")
+    return pd.DataFrame()
+
+
+def fetch_nifty_yfinance(period: str = "60d", retries: int = 4, delay: int = 15) -> pd.DataFrame:
+    """
+    Fetch Nifty 50 daily data from yfinance with retry + backoff.
+    GitHub Actions IPs are often rate-limited by Yahoo Finance (HTTP 429).
+    Retries up to `retries` times with `delay` seconds between attempts.
+    """
+    import yfinance as yf
+
+    for attempt in range(1, retries + 1):
+        try:
+            log.info(f"yfinance daily attempt {attempt}/{retries} …")
+            ticker = yf.Ticker("^NSEI")
+            df = ticker.history(period=period, interval="1d", auto_adjust=True)
+            if not df.empty:
+                return _normalise_df(df)
+            log.warning("yfinance returned empty dataframe")
+        except Exception as e:
+            log.warning(f"yfinance attempt {attempt} failed: {e}")
+        if attempt < retries:
+            log.info(f"Waiting {delay}s before retry …")
+            time.sleep(delay)
+            delay = min(delay * 2, 60)
+    return pd.DataFrame()
+
+
+def fetch_nifty_daily() -> pd.DataFrame:
+    """
+    Fetch Nifty 50 daily OHLCV using a waterfall of sources:
+      1. Stooq  (most reliable from CI — no rate limits)
+      2. yfinance with retry
+      3. NSE bhavcopy (single bar fallback)
+    """
+    df = fetch_nifty_stooq()
+    if not df.empty:
+        return df
+
+    df = fetch_nifty_yfinance()
+    if not df.empty:
+        return df
+
+    df = fetch_nifty_nse_bhavcopy()
+    if not df.empty:
+        return df
+
+    raise RuntimeError(
+        "All daily data sources failed (Stooq, yfinance, NSE bhavcopy). "
+        "Check network connectivity."
+    )
+
+
+def fetch_nifty_intraday_yfinance(interval: str = "5m", period: str = "5d",
+                                   retries: int = 3, delay: int = 10) -> pd.DataFrame:
+    """Intraday data from yfinance with retry."""
+    import yfinance as yf
+
+    for attempt in range(1, retries + 1):
+        try:
+            log.info(f"yfinance intraday {interval} attempt {attempt}/{retries} …")
+            df = yf.download("^NSEI", period=period, interval=interval,
+                             auto_adjust=True, progress=False)
+            if not df.empty:
+                return _normalise_df(df)
+        except Exception as e:
+            log.warning(f"yfinance intraday {interval} attempt {attempt} failed: {e}")
+        if attempt < retries:
+            time.sleep(delay)
+            delay = min(delay * 2, 45)
+    return pd.DataFrame()
 
 
 def fetch_nifty_tvdatafeed(interval_label: str = "1D") -> pd.DataFrame:
@@ -82,15 +199,28 @@ def fetch_nifty_tvdatafeed(interval_label: str = "1D") -> pd.DataFrame:
 
 
 def fetch_india_vix() -> float | None:
-    """Fetch India VIX from yfinance."""
+    """Fetch India VIX — yfinance with retry, then NSE API fallback."""
+    import yfinance as yf
+    for attempt in range(3):
+        try:
+            hist = yf.Ticker("^INDIAVIX").history(period="2d", interval="1d")
+            if not hist.empty:
+                return round(float(hist["Close"].iloc[-1]), 2)
+        except Exception as e:
+            log.warning(f"India VIX yfinance attempt {attempt+1} failed: {e}")
+            time.sleep(10)
+    # NSE fallback
     try:
-        import yfinance as yf
-        vix = yf.Ticker("^INDIAVIX")
-        hist = vix.history(period="2d", interval="1d")
-        if not hist.empty:
-            return round(float(hist["Close"].iloc[-1]), 2)
+        headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://www.nseindia.com/"}
+        s = requests.Session()
+        s.get("https://www.nseindia.com", headers=headers, timeout=10)
+        r = s.get("https://www.nseindia.com/api/allIndices", headers=headers, timeout=10)
+        if r.status_code == 200:
+            for item in r.json().get("data", []):
+                if "VIX" in item.get("index", "").upper():
+                    return round(float(item["last"]), 2)
     except Exception as e:
-        log.warning(f"India VIX fetch failed: {e}")
+        log.warning(f"India VIX NSE fallback failed: {e}")
     return None
 
 
@@ -673,10 +803,8 @@ def generate_report(report_date: date) -> str:
     log.info(f"=== Nifty 50 Analysis Agent starting | UK: {uk_now:%Y-%m-%d %H:%M} | IST: {ist_now:%Y-%m-%d %H:%M} ===")
 
     # ── Fetch data ──────────────────────────────
-    # Try TradingView first, fallback to yfinance
-    daily_df = fetch_nifty_tvdatafeed("1D")
-    if daily_df.empty:
-        daily_df = fetch_nifty_yfinance("60d")
+    # Daily data — Stooq → yfinance → NSE bhavcopy
+    daily_df = fetch_nifty_daily()
 
     m5_df = fetch_nifty_tvdatafeed("5m")
     if m5_df.empty:
